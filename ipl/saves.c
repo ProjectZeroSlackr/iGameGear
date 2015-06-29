@@ -146,13 +146,28 @@ int load_rom(const char *filename)
   return load_rom_normal(filename);
 }
 
+// For save files
+// ~Keripo
+const char *get_filename(const char *file)
+{
+	char *c = strrchr(file, '/');
+	if (c != NULL) {
+		static char ret[256];
+		sprintf(ret, "%s", c+1);
+		return ret;
+	} else {
+		return file;
+	}
+}
+
 
 /* Load SRAM data */
 void load_sram(const char* game_name)
 {
   char name[0x100];
   FILE *fd;
-  strcpy(name, game_name);
+  strcpy(name, "/opt/Emulators/iGameGear/Saves/");
+  strcat(name, get_filename(game_name));
   strcpy(strrchr(name, '.'), ".sav");
   fd = fopen(name, "rb");
   if(fd) {
@@ -168,7 +183,8 @@ void save_sram(const char* game_name)
     if(sms.save) {
         char name[0x100];
         FILE *fd = NULL;
-        strcpy(name, game_name);
+		strcpy(name, "/opt/Emulators/iGameGear/Saves/");
+        strcat(name, get_filename(game_name));
         strcpy(strrchr(name, '.'), ".sav");
         fd = fopen(name, "wb");
         if(fd) {
@@ -184,7 +200,8 @@ int load_state(const char* game_name, int state_slot)
 {
     char name[0x100];
     FILE *fd = NULL;
-    strcpy(name, game_name);
+	strcpy(name, "/opt/Emulators/iGameGear/Saves/");
+    strcat(name, get_filename(game_name));
     sprintf(strrchr(name, '.'), ".st%d", state_slot);
     fd = fopen(name, "rb");
     if(!fd) return (0);
@@ -199,7 +216,8 @@ int save_state(const char* game_name, int state_slot)
 {
     char name[0x100];
     FILE *fd = NULL;
-    strcpy(name, game_name);
+	strcpy(name, "/opt/Emulators/iGameGear/Saves/");
+    strcat(name, get_filename(game_name));
     sprintf(strrchr(name, '.'), ".st%d", state_slot);
     fd = fopen(name, "wb");
     if(!fd) return (0);
