@@ -11,7 +11,7 @@ uint8 *linebuf;
 uint8 internal_buffer[0x100];
 
 /* Precalculated pixel table */
-uint16 pixel[PALETTE_SIZE];
+uint32 pixel[PALETTE_SIZE];
 
 /* Pattern cache */
 uint8 cache[0x20000];
@@ -227,9 +227,10 @@ void render_bg_sms(int line)
     uint16 *nt = (uint16 *)&vdp.vram[vdp.ntab + ((v_line >> 3) << 6)];
     int nt_scroll = (hscroll >> 3);
     int shift = (hscroll & 7);
+    //int shift = 0;
     uint32 atex_mask;
     uint32 *cache_ptr;
-    uint32 *linebuf_ptr = (uint32 *)&linebuf[0 - shift];
+    uint32 *linebuf_ptr = (uint32 *)&linebuf[0];
 
     /* Draw first column (clipped) */
     if(shift)
@@ -255,31 +256,51 @@ void render_bg_sms(int line)
     /* Draw a line of the background */
     for(; column < vp_hend; column += 1)
     {
-        /* Stop vertical scrolling for leftmost eight columns */
-        if((vdp.reg[0] & 0x80) && (!locked) && (column >= 24))
+        // Stop vertical scrolling for leftmost eight columns
+        /*if((vdp.reg[0] & 0x80) && (!locked) && (column >= 24))
         {
             locked = 1;
             v_row = (line & 7) << 3;
             nt = (uint16 *)&vdp.vram[((vdp.reg[2] << 10) & 0x3800) + ((line >> 3) << 6)];
         }
 
-        /* Get name table attribute word */
+        // Get name table attribute word
         attr = nt[(column + nt_scroll) & 0x1F];
 
 #ifndef LSB_FIRST
         attr = (((attr & 0xFF) << 8) | ((attr & 0xFF00) >> 8));
 #endif
-        /* Expand priority and palette bits */
+        // Expand priority and palette bits
         atex_mask = atex[(attr >> 11) & 3];
 
-        /* Point to a line of pattern data in cache */
+        // Point to a line of pattern data in cache
         cache_ptr = (uint32 *)&cache[((attr & 0x7FF) << 6) | (v_row)];
         
-        /* Copy the left half, adding the attribute bits in */
+        // Copy the left half, adding the attribute bits in
         write_dword( &linebuf_ptr[(column << 1)] , read_dword( &cache_ptr[0] ) | (atex_mask));
 
-        /* Copy the right half, adding the attribute bits in */
-        write_dword( &linebuf_ptr[(column << 1) | (1)], read_dword( &cache_ptr[1] ) | (atex_mask));
+        // Copy the right half, adding the attribute bits in
+        write_dword( &linebuf_ptr[(column << 1) | (1)], read_dword( &cache_ptr[1] ) | (atex_mask));*/
+
+	// FIXME: optimize this
+        int x, c, a;
+    
+        char *p = &linebuf[(0 - shift)+(column << 3)];
+    
+        attr = nt[(column + nt_scroll) & 0x1F];
+
+#ifndef LSB_FIRST
+        attr = (((attr & 0xFF) << 8) | ((attr & 0xFF00) >> 8));
+#endif
+        a = (attr >> 7) & 0x30;
+        
+        for(x = 0; x < 8; x += 1)
+        {
+            c = cache[((attr & 0x7FF) << 6) | (v_row) | (x)];
+            p[x] = ((c) | (a));
+        }
+
+
     }
 
     /* Draw last column (clipped) */
@@ -315,30 +336,50 @@ void render_bg_gg(int line)
     uint16 attr;
     uint16 *nt = (uint16 *)&vdp.vram[vdp.ntab + ((v_line >> 3) << 6)];
     int nt_scroll = (hscroll >> 3);
+    int shift = (hscroll & 7);
+    //int shift = 0;
     uint32 atex_mask;
     uint32 *cache_ptr;
-    uint32 *linebuf_ptr = (uint32 *)&linebuf[0 - (hscroll & 7)];
+    //uint32 *linebuf_ptr = (uint32 *)&linebuf[0];
 
     /* Draw a line of the background */
     for(column = vp_hstart; column <= vp_hend; column += 1)
     {
-        /* Get name table attribute word */
+        // Get name table attribute word
+        /*attr = nt[(column + nt_scroll) & 0x1F];
+
+#ifndef LSB_FIRST
+        attr = (((attr & 0xFF) << 8) | ((attr & 0xFF00) >> 8));
+#endif
+        // Expand priority and palette bits
+        atex_mask = atex[(attr >> 11) & 3];
+
+        // Point to a line of pattern data in cache
+        cache_ptr = (uint32 *)&cache[((attr & 0x7FF) << 6) | (v_row)];
+
+        // Copy the left half, adding the attribute bits in
+        write_dword( &linebuf_ptr[(column << 1)] , read_dword( &cache_ptr[0] ) | (atex_mask));
+
+        // Copy the right half, adding the attribute bits in
+        write_dword( &linebuf_ptr[(column << 1) | (1)], read_dword( &cache_ptr[1] ) | (atex_mask));*/
+
+	// FIXME: optimize this
+        int x, c, a;
+    
+        char *p = &linebuf[(0 - shift)+(column << 3)];
+        
         attr = nt[(column + nt_scroll) & 0x1F];
 
 #ifndef LSB_FIRST
         attr = (((attr & 0xFF) << 8) | ((attr & 0xFF00) >> 8));
 #endif
-        /* Expand priority and palette bits */
-        atex_mask = atex[(attr >> 11) & 3];
-
-        /* Point to a line of pattern data in cache */
-        cache_ptr = (uint32 *)&cache[((attr & 0x7FF) << 6) | (v_row)];
-
-        /* Copy the left half, adding the attribute bits in */
-        write_dword( &linebuf_ptr[(column << 1)] , read_dword( &cache_ptr[0] ) | (atex_mask));
-
-        /* Copy the right half, adding the attribute bits in */
-        write_dword( &linebuf_ptr[(column << 1) | (1)], read_dword( &cache_ptr[1] ) | (atex_mask));
+        a = (attr >> 7) & 0x30;
+          
+        for(x = 0; x < 8; x += 1)
+        {
+            c = cache[((attr & 0x7FF) << 6) | (v_row) | (x)];
+            p[x] = ((c) | (a));
+        }
     }
 }
 
@@ -557,7 +598,7 @@ void remap_8_to_16(int line)
     int i;
     int length = BMP_WIDTH;
     int ofs = BMP_X_OFFSET;
-    uint16 *p = (uint16 *)&bitmap.data[(line * bitmap.pitch) + (ofs << 1)];
+    uint32 *p = (uint32 *)&bitmap.data[(line * bitmap.pitch) + (ofs << 1)];
 
     for(i = 0; i < length; i += 1)
     {

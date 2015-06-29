@@ -2,8 +2,10 @@
 #ifndef _SYSTEM_H_
 #define _SYSTEM_H_
 
+#ifdef ENABLESOUND
 void ym2413_write(int chip, int offset, int data);
 extern OPLL *opll;
+#endif
 
 #define PALETTE_SIZE        (0x20)
 
@@ -31,6 +33,7 @@ extern OPLL *opll;
 #define INPUT_RIGHT       (0x00000008)
 #define INPUT_BUTTON2     (0x00000010)
 #define INPUT_BUTTON1     (0x00000020)
+#define INPUT_BUTTON3     (0x00000040)    /* used as start */
 
 /* These can be used for 'input.system' */
 #define INPUT_START       (0x00000001)    /* Game Gear only */    
@@ -46,14 +49,14 @@ typedef struct
 }t_input;
 
 /* Sound emulation structure */
-typedef struct
+/*typedef struct
 {
     int enabled;
     int bufsize;
     signed short *buffer[2];
     signed short *fm_buffer;        /* internal use only */
-    signed short *psg_buffer[2];    /* internal use only */
-    int log;
+    /*signed short *psg_buffer[2];    /* internal use only */
+    /*int log;
     void (*callback)(int data);
 }t_snd;
 
@@ -83,7 +86,7 @@ typedef struct
 
 /* Global variables */
 extern t_bitmap bitmap;     /* Display bitmap */
-extern t_snd snd;           /* Sound streams */
+//extern t_snd snd;           /* Sound streams */
 extern t_cart cart;         /* Game cartridge data */
 extern t_input input;       /* Controller input */
 
@@ -94,6 +97,6 @@ void system_reset(void);
 void system_load_sram(void);
 void system_save_state(void *fd);
 void system_load_state(void *fd);
-void audio_init(int rate);
+//void audio_init(int rate);
 
 #endif /* _SYSTEM_H_ */

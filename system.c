@@ -20,15 +20,19 @@
 
 
 t_bitmap bitmap;
-t_cart cart;                
-t_snd snd;
+t_cart cart;
+
 t_input input;
+
+#ifdef ENABLESOUND
+t_snd snd;
 OPLL *opll;
 
 struct
 {
     char reg[64];
 }ym2413;
+#endif
 
 void system_init(int rate)
 {
@@ -42,7 +46,9 @@ void system_init(int rate)
     render_init();
 
     /* Enable sound emulation if the sample rate was specified */
+#ifdef ENABLESOUND
     audio_init(rate);
+#endif
 
     /* Don't save SRAM by default */
     sms.save = 0;
@@ -51,6 +57,7 @@ void system_init(int rate)
     memset(&input, 0, sizeof(t_input));
 }
 
+#ifdef ENABLESOUND
 void audio_init(int rate)
 {
     /* Clear sound context */
@@ -97,15 +104,17 @@ void audio_init(int rate)
     /* Inform other functions that we can use sound */
     snd.enabled = 1;
 }
-
+#endif
 
 void system_shutdown(void)
 {
+#ifdef ENABLESOUND
     if(snd.enabled)
     {
         OPLL_delete(opll);
         OPLL_close();
     }
+#endif
 }
 
 
@@ -116,11 +125,13 @@ void system_reset(void)
     sms_reset();
     render_reset();
     system_load_sram();
+#ifdef ENABLESOUND
     if(snd.enabled)
     {
         OPLL_reset(opll) ;
         OPLL_reset_patch(opll,0) ;            /* if use default voice data. */ 
     }
+#endif
 }
 
 
@@ -136,11 +147,13 @@ void system_save_state(void *fd)
     fwrite(Z80_Context, sizeof(Z80_Regs), 1, fd);
     fwrite(&after_EI, sizeof(int), 1, fd);
 
+#ifdef ENABLESOUND
     /* Save YM2413 registers */
     fwrite(&ym2413.reg[0], 0x40, 1, fd);
 
     /* Save SN76489 context */
     fwrite(&sn[0], sizeof(t_SN76496), 1, fd);
+#endif
 }
 
 
@@ -163,11 +176,13 @@ void system_load_state(void *fd)
     fread(Z80_Context, sizeof(Z80_Regs), 1, fd);
     fread(&after_EI, sizeof(int), 1, fd);
 
+#ifdef ENABLESOUND
     /* Load YM2413 registers */
     fread(reg, 0x40, 1, fd);
 
     /* Load SN76489 context */
     fread(&sn[0], sizeof(t_SN76496), 1, fd);
+#endif
 
     /* Restore callbacks */
     z80_set_irq_callback(sms_irq_callback);
@@ -204,6 +219,7 @@ void system_load_state(void *fd)
         palette_sync(i);
 
     /* Restore sound state */
+#ifdef ENABLESOUND
     if(snd.enabled)
     {
         /* Clear YM2413 context */
@@ -242,8 +258,10 @@ void system_load_state(void *fd)
             ym2413_write(0, 1, reg[i]);
         }
     }
+#endif
 }
 
+#ifdef ENABLESOUND
 void ym2413_write(int chip, int offset, int data)
 {
     static uint8 latch = 0;
@@ -252,6 +270,7 @@ void ym2413_write(int chip, int offset, int data)
     else
         latch = data;
 }
+#endif
 
 
 

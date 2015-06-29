@@ -29,7 +29,7 @@ void sms_frame(int skip_render)
          sms.paused = 0;
     }
 
-    if(snd.log) snd.callback(0x00);
+    /*if(snd.log) snd.callback(0x00);*/
 
     for(vdp.line = 0; vdp.line < 262; vdp.line += 1)
     {
@@ -44,7 +44,7 @@ void sms_frame(int skip_render)
     }
 
     /* Update the emulated sound stream */
-    if(snd.enabled) 
+    /*if(snd.enabled) 
     {
         int count;
 
@@ -69,10 +69,8 @@ void sms_frame(int skip_render)
             snd.buffer[0][count] = left;
             snd.buffer[1][count] = right;
         }
-    }
+    }*/
 }
-
-
 void sms_init(void)
 {
 #if PSX
@@ -147,21 +145,21 @@ void cpu_writeport(int port, int data)
             break;
 
         case 0x06: /* GG STEREO */
-            if(snd.log) {
+            /*if(snd.log) {
             snd.callback(0x04);
             snd.callback(data);
-            }
+            }*/
             sms.psg_mask = (data & 0xFF);
             break;
 
-        case 0x7E: /* SN76489 PSG */
-        case 0x7F:
-            if(snd.log) {
+        //case 0x7E: /* SN76489 PSG */
+        //case 0x7F:
+            /*if(snd.log) {
             snd.callback(0x03);
             snd.callback(data);
             }
             if(snd.enabled) SN76496Write(0, data);
-            break;
+            break;*/
 
         case 0xBE: /* VDP DATA */
             vdp_data_w(data);
@@ -173,13 +171,13 @@ void cpu_writeport(int port, int data)
             break;
 
         case 0xF0: /* YM2413 */
-        case 0xF1:
+        /*case 0xF1:
             if(snd.log) {
             snd.callback((port & 1) ? 0x06 : 0x05);
             snd.callback(data);
             }
             if(snd.enabled && sms.use_fm) ym2413_write(0, port & 1, data);
-            break;
+            break;*/
 
         case 0xF2: /* YM2413 DETECT */
             if(sms.use_fm) sms.port_F2 = (data & 1);

@@ -24,9 +24,11 @@
 #include "z80.h"
 #include "sms.h"
 #include "vdp.h"
-#include "emu2413.h"
 #include "render.h"
+#ifdef ENABLESOUND
+#include "emu2413.h"
 #include "sn76496.h"
+#endif
 #include "system.h"
 
 #endif /* _SHARED_H_ */
